@@ -351,8 +351,13 @@ body.is-plain .tabs{display:none}
 .plain .when{font-family:var(--f-data);font-size:.82rem;color:var(--form)}
 .plain a{color:var(--form)}
 .plain .pf-grade{font-family:var(--f-data);font-size:.78rem;color:var(--muted);background:#eef5fb;padding:8px 12px;border-radius:4px;margin:0 0 22px}
-.plain .inshort{display:block;font-size:.95rem;margin-top:2px}
-.plain .inshort b{color:var(--form);font-weight:600}
+.plain .pubs-plain{list-style:none;padding:0}
+.plain .pubs-plain li{margin:0;padding:10px 0;border-bottom:1px solid var(--form-soft)}
+.plain .pubs-plain .when{display:block}
+.plain .inshort{display:block;margin-top:2px}
+.plain details{margin-top:4px}
+.plain summary{cursor:pointer;font-family:var(--f-data);font-size:.76rem;color:var(--form)}
+.plain details p{font-size:.92rem;margin:6px 0 0}
 .plain .back{display:inline-block;margin-bottom:22px;font-family:var(--f-data);font-size:.8rem}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--f-data);font-size:.7rem;color:var(--form)}
 </style>
@@ -769,7 +774,8 @@ body.is-plain .tabs{display:none}
     h+='<p>Email: minseo82@unc.edu &nbsp;·&nbsp; <a href="cv.pdf" target="_blank" rel="noopener">CV (PDF)</a></p>';
     h+='<h2>What I study</h2><ul>'+study.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>';
     h+='<h2>What I am working on now</h2><ul>'+now.map(function(n){return '<li><b>'+n[0]+':</b> '+n[1]+'</li>'}).join('')+'</ul>';
-    h+='<h2>Papers and talks</h2><ul>'+WORKS.map(function(w,i){return '<li><span class="when">'+w.d+'</span> '+w.t+'. <span class="meta">'+w.v+' '+w.s+'.</span><br><span class="inshort"><b>In short:</b> '+(PLAIN_PUBS[i]||'')+'</span></li>'}).join('')+'</ul>';
+    var KINDP={Talk:'Talk',Paper:'Paper',Poster:'Poster'};
+    h+='<h2>Papers and talks</h2><ul class="pubs-plain">'+WORKS.map(function(w,i){return '<li><span class="when">'+w.d+' · '+(KINDP[w.k]||w.k)+' · '+w.s+'</span><span class="inshort">'+(PLAIN_PUBS[i]||'')+'</span><details><summary>Full citation</summary><p>'+w.t+'. <span class="meta">'+w.v+'</span></p></details></li>'}).join('')+'</ul>';
     h+='<h2>Where I have worked and studied</h2><ul>'+[].map.call(document.querySelectorAll('#hist tbody tr:not(.fold-row)'),function(r){return '<li><span class="when">'+txt(r.querySelector('td.d'))+'</span> '+plainify(txt(r.querySelector('.e')))+'<span class="meta">, '+plainify(txt(r.querySelector('.w')))+'</span></li>'}).join('')+'</ul>';
     h+='<h2>Awards and certificates</h2><ul>'+[].map.call(document.querySelectorAll('#v-results .sec .tbl tr'),function(r){var t=r.querySelectorAll('td');return '<li><span class="when">'+txt(t[0])+'</span> '+txt(t[1])+'<span class="meta">, '+txt(t[2])+'</span></li>'}).join('')+'</ul>';
     h+='<h2>Skills</h2><ul><li><b>Research:</b> reviewing many studies, planning how people rate AI writing, checking that raters agree</li><li><b>Coding:</b> Python, R, SQL, HTML/CSS</li><li><b>Languages:</b> Korean and English</li></ul>';
