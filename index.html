@@ -350,6 +350,9 @@ body.is-plain .tabs{display:none}
 .plain .meta{color:var(--muted);font-size:.95rem}
 .plain .when{font-family:var(--f-data);font-size:.82rem;color:var(--form)}
 .plain a{color:var(--form)}
+.plain .pf-grade{font-family:var(--f-data);font-size:.78rem;color:var(--muted);background:#eef5fb;padding:8px 12px;border-radius:4px;margin:0 0 22px}
+.plain .inshort{display:block;font-size:.95rem;margin-top:2px}
+.plain .inshort b{color:var(--form);font-weight:600}
 .plain .back{display:inline-block;margin-bottom:22px;font-family:var(--f-data);font-size:.8rem}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--f-data);font-size:.7rem;color:var(--form)}
 </style>
@@ -741,19 +744,35 @@ body.is-plain .tabs{display:none}
 
   /* plain text version, built from the form content */
   function txt(el){return el?el.textContent.replace(/\s+/g,' ').trim():''}
+  var PLAIN_PUBS=[
+    'A look at how studies ask real people, not just computers, to judge AI summaries of medical notes.',
+    'We trained small AI models to write hospital-stay summaries that patients can read, and compared two ways of training them.',
+    'We used AI to summarize the notes doctors write when cancer patients leave the hospital, and tried out a way to judge those summaries.',
+    'A plan for public libraries to help people use AI with care and think critically about it.'
+  ];
+  var EXPAND=[[/\bMSIS\b/,"Master's in Information Science"],[/DATA 120/,'DATA 120, a course on the ethics of AI'],
+    [/AMIA 2026 Annual Symposium/,'AMIA 2026, a yearly meeting of the American Medical Informatics Association'],
+    [/AMIA Informatics Year-in-Review/,'AMIA Year-in-Review, a yearly roundup of health informatics research'],
+    [/oncology discharge notes/,'notes for cancer patients leaving the hospital'],[/\bLIS\b/,'Library and Information Science'],
+    [/B\.L\.S\., Library Science/,'Bachelor of Library Science']];
+  function plainify(t){EXPAND.forEach(function(e){t=t.replace(e[0],e[1])});return t}
   function buildPlain(){
     var el=document.getElementById('v-plain'); if(el.dataset.done) return;
+    var intro='Hi, I am Minseo Kim. I am a master’s student at UNC Chapel Hill. Doctors write notes after every visit. AI can now rewrite these notes in plain words for patients. I study if patients really understand what the AI writes. Before this, I trained as a librarian in Korea. Next, I hope to start a PhD.';
+    var study=['How AI can explain medical notes to patients','How to check if people truly understand the AI’s words, not just if a computer says the text is easy','How people find and use health information','How libraries can help people with health information'];
+    var now=[['Main project','I am reading many studies to see how people judge AI summaries of medical notes.'],['Pilot study','Our team tested AI summaries of hospital notes for cancer patients. I helped plan how to judge them.'],['App idea','A phone app that turns cancer care notes into plain words for patients.']];
+    var plainText=[intro].concat(study,now.map(function(n){return n[1]}),PLAIN_PUBS).join(' ');
     var h='<a class="back" href="#intake" data-go="intake">&larr; Back to the full form</a>';
+    h+='<p class="pf-grade">This page is written in plain words. The plain parts read at about grade <b style="color:'+(fk(plainText)<=6?'#2e7d4a':'var(--form)')+'">'+fk(plainText).toFixed(1)+'</b> (Flesch-Kincaid, computed live).</p>';
     h+='<h1>Minseo Kim <span class="meta" style="font-size:1rem;font-weight:400">김민서</span></h1>';
-    h+='<p class="meta">MSIS student, School of Data and Information Sciences, UNC Chapel Hill</p>';
-    h+='<p>I study whether AI-written health information actually makes sense to patients. I am seeking a PhD in Information Science.</p>';
+    h+='<p>'+intro+'</p>';
     h+='<p>Email: minseo82@unc.edu &nbsp;·&nbsp; <a href="cv.pdf" target="_blank" rel="noopener">CV (PDF)</a></p>';
-    h+='<h2>Research interests</h2><ul>'+[].map.call(document.querySelectorAll('#v-research .chkl li'),function(li){return '<li>'+txt(li)+'</li>'}).join('')+'</ul>';
-    h+='<h2>Current work</h2><ul>'+[].map.call(document.querySelectorAll('#v-research .olist li'),function(li){var b=li.querySelector('b');return '<li><b>'+txt(b)+':</b> '+txt(li).replace(txt(b),'').trim()+'</li>'}).join('')+'</ul>';
-    h+='<h2>Publications and presentations</h2><ul>'+WORKS.map(function(w){return '<li><span class="when">'+w.d+'</span> '+w.t+'. <span class="meta">'+w.v+' '+w.s+'.</span></li>'}).join('')+'</ul>';
-    h+='<h2>Experience</h2><ul>'+[].map.call(document.querySelectorAll('#hist tbody tr:not(.fold-row)'),function(r){return '<li><span class="when">'+txt(r.querySelector('td.d'))+'</span> '+txt(r.querySelector('.e'))+'<span class="meta">, '+txt(r.querySelector('.w'))+'</span></li>'}).join('')+'</ul>';
+    h+='<h2>What I study</h2><ul>'+study.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>';
+    h+='<h2>What I am working on now</h2><ul>'+now.map(function(n){return '<li><b>'+n[0]+':</b> '+n[1]+'</li>'}).join('')+'</ul>';
+    h+='<h2>Papers and talks</h2><ul>'+WORKS.map(function(w,i){return '<li><span class="when">'+w.d+'</span> '+w.t+'. <span class="meta">'+w.v+' '+w.s+'.</span><br><span class="inshort"><b>In short:</b> '+(PLAIN_PUBS[i]||'')+'</span></li>'}).join('')+'</ul>';
+    h+='<h2>Where I have worked and studied</h2><ul>'+[].map.call(document.querySelectorAll('#hist tbody tr:not(.fold-row)'),function(r){return '<li><span class="when">'+txt(r.querySelector('td.d'))+'</span> '+plainify(txt(r.querySelector('.e')))+'<span class="meta">, '+plainify(txt(r.querySelector('.w')))+'</span></li>'}).join('')+'</ul>';
     h+='<h2>Awards and certificates</h2><ul>'+[].map.call(document.querySelectorAll('#v-results .sec .tbl tr'),function(r){var t=r.querySelectorAll('td');return '<li><span class="when">'+txt(t[0])+'</span> '+txt(t[1])+'<span class="meta">, '+txt(t[2])+'</span></li>'}).join('')+'</ul>';
-    h+='<h2>Skills</h2><ul>'+[].map.call(document.querySelectorAll('#v-research .fields > div'),function(d){return '<li><b>'+txt(d.querySelector('.lbl'))+':</b> '+d.querySelector('.data').innerHTML.replace(/<br\s*\/?>/g,', ')+'</li>'}).join('')+'</ul>';
+    h+='<h2>Skills</h2><ul><li><b>Research:</b> reviewing many studies, planning how people rate AI writing, checking that raters agree</li><li><b>Coding:</b> Python, R, SQL, HTML/CSS</li><li><b>Languages:</b> Korean and English</li></ul>';
     el.innerHTML=h; el.dataset.done='1';
   }
 
