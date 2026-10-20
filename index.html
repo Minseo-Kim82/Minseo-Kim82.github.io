@@ -655,7 +655,7 @@ mark.hl{background:var(--marker)}
     grade.textContent=L.g.toFixed(1);
     grade.className='cell '+(L.g<=6?'lo':(L.g>=9?'hi':''));
     gflag.textContent=L.g<=6?(i===2?'\u2713 target*':'\u2713 target'):(L.g>=9?'H':'');
-    vasNote.innerHTML=i===2?'<b>*</b> The lowest grade here, but most details are left out. A low score does not mean nothing was lost.':'Patient materials usually aim for grade 6 or lower.';
+    vasNote.innerHTML=i===2?'<b>*</b> Easiest to read, but most details are left out. A lower grade is not always a better summary.':'Patient materials usually aim for grade 6 or lower.';
     vasNote.classList.toggle('warn',i===2);
     function apply(){
       body.className='lines'+(i===2?' l2':''); body.innerHTML=L.html;
