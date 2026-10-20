@@ -550,7 +550,7 @@ body.is-plain .tabs{display:none}
         <ul class="olist">
           <li><b>Thesis</b> Scoping review of human-centered evaluation for LLM clinical note summaries</li>
           <li><b>Pilot</b> Evaluation design for AI-summarized oncology discharge notes</li>
-          <li><b>Project</b> FHIR Notes for Patients, a plain-language app prototype</li>
+          <li><b>Project</b> FHIR Notes for Patients, a plain-language web app prototype</li>
         </ul>
       </div></div>
       <div><span class="L">A<small>Interests</small></span><div>
@@ -765,7 +765,7 @@ body.is-plain .tabs{display:none}
     var el=document.getElementById('v-plain'); if(el.dataset.done) return;
     var intro='Hi, I am Minseo Kim. I am a master’s student at UNC Chapel Hill. Doctors write notes after every visit. AI can now rewrite these notes in plain words for patients. I study if patients really understand what the AI writes. Before this, I trained as a librarian in Korea. Next, I hope to start a PhD.';
     var study=['How AI can explain medical notes to patients','How to check if people truly understand the AI’s words, not just if a computer says the text is easy','How people find and use health information','How libraries can help people with health information'];
-    var now=[['Main project','I am reading many studies to see how people judge AI summaries of medical notes.'],['Pilot study','Our team tested AI summaries of hospital notes for cancer patients. I helped plan how to judge them.'],['App idea','A phone app that turns cancer care notes into plain words for patients.']];
+    var now=[['Main project','I am reading many studies to see how people judge AI summaries of medical notes.'],['Pilot study','Our team tested AI summaries of hospital notes for cancer patients. I helped plan how to judge them.'],['App idea','A web app that turns cancer care notes into plain words for patients.']];
     var plainText=[intro].concat(study,now.map(function(n){return n[1]}),PLAIN_PUBS).join(' ');
     var h='<a class="back" href="#intake" data-go="intake">&larr; Back to the full form</a>';
     h+='<p class="pf-grade">This page is written in plain words. The plain parts read at about grade <b style="color:'+(fk(plainText)<=6?'#2e7d4a':'var(--form)')+'">'+fk(plainText).toFixed(1)+'</b> (Flesch-Kincaid, computed live).</p>';
