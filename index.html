@@ -337,6 +337,20 @@ mark.hl{background:var(--marker)}
 .fields > div:first-child{border-left:0}
 .fields .data{font-size:.84rem;line-height:1.55}
 @media (max-width:600px){.fields{grid-template-columns:1fr}.fields > div{border-left:0;border-top:1px solid var(--form-soft)}.fields > div:first-child{border-top:0}}
+/* patient-friendly (plain) version */
+.pf-link{color:var(--form);font-family:var(--f-data);font-size:.7rem;text-transform:uppercase;letter-spacing:.04em}
+body.is-plain{background:#fff}
+body.is-plain .tabs{display:none}
+.plain{max-width:640px;margin:0 auto;padding:8px 0 40px;font-family:var(--f-form);font-size:1.05rem;line-height:1.6;color:var(--ink)}
+.plain h1{font-size:2rem;margin:0;line-height:1.1;color:var(--form)}
+.plain h2{font-size:.82rem;letter-spacing:.1em;text-transform:uppercase;color:var(--form);margin:34px 0 8px;padding-bottom:4px;border-bottom:2px solid var(--cb)}
+.plain p{margin:6px 0}
+.plain ul{margin:0;padding-left:1.1em}
+.plain li{margin:5px 0}
+.plain .meta{color:var(--muted);font-size:.95rem}
+.plain .when{font-family:var(--f-data);font-size:.82rem;color:var(--form)}
+.plain a{color:var(--form)}
+.plain .back{display:inline-block;margin-bottom:22px;font-family:var(--f-data);font-size:.8rem}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--f-data);font-size:.7rem;color:var(--form)}
 </style>
 </head>
@@ -461,7 +475,7 @@ mark.hl{background:var(--marker)}
       </div>
     </div>
 
-    <div class="foot"><span>MK-01 REV 10/2026</span><span>PATIENT-FRIENDLY VERSION AVAILABLE ON REQUEST</span></div>
+    <div class="foot"><span>MK-01 REV 10/2026</span><a class="pf-link" href="#plain" data-go="plain">Patient-friendly version: plain text &rarr;</a></div>
   </section>
 
   <!-- 2. HISTORY -->
@@ -591,18 +605,21 @@ mark.hl{background:var(--marker)}
 
     <div class="foot"><span>MK-04 REV 10/2026</span><span>RETAIN FOR YOUR RECORDS</span></div>
   </section>
+  <article class="plain" id="v-plain" hidden aria-label="Plain text version"></article>
 </div>
 
 <script>
 (function(){
   /* pages */
-  var MAP={intake:'v-intake',history:'v-history',research:'v-research',results:'v-results'};
+  var MAP={intake:'v-intake',history:'v-history',research:'v-research',results:'v-results',plain:'v-plain'};
   function go(v,scroll){
     if(!MAP[v]) v='intake';
     Object.keys(MAP).forEach(function(k){document.getElementById(MAP[k]).hidden=(k!==v)});
     [].forEach.call(document.querySelectorAll('.tabs a'),function(a){
       if(a.dataset.go===v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
     });
+    document.body.classList.toggle('is-plain',v==='plain');
+    if(v==='plain') setTimeout(buildPlain,0);
     if(scroll) window.scrollTo(0,0);
   }
   document.addEventListener('click',function(e){
@@ -722,9 +739,27 @@ mark.hl{background:var(--marker)}
     fb2.innerHTML=open?'Hide earlier entries <span aria-hidden="true">&uarr;</span>':'Show '+nEarly+' earlier entries &middot; Korea, 2019 to 2025 <span aria-hidden="true">&darr;</span>';
   });
 
+  /* plain text version, built from the form content */
+  function txt(el){return el?el.textContent.replace(/\s+/g,' ').trim():''}
+  function buildPlain(){
+    var el=document.getElementById('v-plain'); if(el.dataset.done) return;
+    var h='<a class="back" href="#intake" data-go="intake">&larr; Back to the full form</a>';
+    h+='<h1>Minseo Kim <span class="meta" style="font-size:1rem;font-weight:400">김민서</span></h1>';
+    h+='<p class="meta">MSIS student, School of Data and Information Sciences, UNC Chapel Hill</p>';
+    h+='<p>I study whether AI-written health information actually makes sense to patients. I am seeking a PhD in Information Science.</p>';
+    h+='<p>Email: minseo82@unc.edu &nbsp;·&nbsp; <a href="cv.pdf" target="_blank" rel="noopener">CV (PDF)</a></p>';
+    h+='<h2>Research interests</h2><ul>'+[].map.call(document.querySelectorAll('#v-research .chkl li'),function(li){return '<li>'+txt(li)+'</li>'}).join('')+'</ul>';
+    h+='<h2>Current work</h2><ul>'+[].map.call(document.querySelectorAll('#v-research .olist li'),function(li){var b=li.querySelector('b');return '<li><b>'+txt(b)+':</b> '+txt(li).replace(txt(b),'').trim()+'</li>'}).join('')+'</ul>';
+    h+='<h2>Publications and presentations</h2><ul>'+WORKS.map(function(w){return '<li><span class="when">'+w.d+'</span> '+w.t+'. <span class="meta">'+w.v+' '+w.s+'.</span></li>'}).join('')+'</ul>';
+    h+='<h2>Experience</h2><ul>'+[].map.call(document.querySelectorAll('#hist tbody tr:not(.fold-row)'),function(r){return '<li><span class="when">'+txt(r.querySelector('td.d'))+'</span> '+txt(r.querySelector('.e'))+'<span class="meta">, '+txt(r.querySelector('.w'))+'</span></li>'}).join('')+'</ul>';
+    h+='<h2>Awards and certificates</h2><ul>'+[].map.call(document.querySelectorAll('#v-results .sec .tbl tr'),function(r){var t=r.querySelectorAll('td');return '<li><span class="when">'+txt(t[0])+'</span> '+txt(t[1])+'<span class="meta">, '+txt(t[2])+'</span></li>'}).join('')+'</ul>';
+    h+='<h2>Skills</h2><ul>'+[].map.call(document.querySelectorAll('#v-research .fields > div'),function(d){return '<li><b>'+txt(d.querySelector('.lbl'))+':</b> '+d.querySelector('.data').innerHTML.replace(/<br\s*\/?>/g,', ')+'</li>'}).join('')+'</ul>';
+    el.innerHTML=h; el.dataset.done='1';
+  }
+
   /* every page the same height as the tallest */
   function equalize(){
-    var sheets=[].slice.call(document.querySelectorAll('.sheet')), max=0;
+    var sheets=[].slice.call(document.querySelectorAll('.sheet')), max=0; if(document.body.classList.contains('is-plain')) return;
     if(window.innerWidth<=600){sheets.forEach(function(sh){sh.style.minHeight=''});return;}
     sheets.forEach(function(sh){
       var was=sh.hidden; sh.style.minHeight='0';
