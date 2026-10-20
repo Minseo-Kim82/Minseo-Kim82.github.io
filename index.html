@@ -44,6 +44,14 @@ button,input{font:inherit;color:inherit}
   box-shadow:0 -1px 0 rgba(0,0,0,.08) inset;transition:transform .15s ease}
 .tabs a:hover{transform:translateY(1px)}
 .tabs a[aria-current="page"]{transform:translateY(0)}
+.tabs a b{font-weight:600}
+.tabs a .short{display:none}
+@media (max-width:600px){
+  .tabs{flex-wrap:nowrap;gap:3px;padding-left:4px}
+  .tabs a{flex:1 1 0;text-align:center;padding:8px 4px 10px;font-size:.78rem;white-space:nowrap}
+  .tabs a span{margin-right:4px}
+  .tabs a .long{display:none}.tabs a .short{display:inline}
+}
 .tabs a span{font-family:var(--f-data);font-weight:400;color:var(--form);margin-right:6px}
 @media (prefers-reduced-motion:reduce){.tabs a{transition:none}}
 
@@ -72,7 +80,7 @@ button,input{font:inherit;color:inherit}
 /* stamp */
 .stamp{color:var(--check);mix-blend-mode:multiply;opacity:.9}
 .stamp-top{position:absolute;top:4px;right:clamp(96px,19vw,160px);width:96px;height:96px;transform:rotate(-12deg);pointer-events:none}
-@media (max-width:520px){.stamp-top{width:72px;height:72px;right:8px;top:-10px}}
+@media (max-width:600px){.stamp-top{display:none}}
 .stampline{min-height:6rem;align-items:center}
 .stampline svg{width:88px;height:88px;transform:rotate(-8deg) translateY(12px)}
 
@@ -90,7 +98,7 @@ button,input{font:inherit;color:inherit}
 .alert{font-family:var(--f-data);font-size:.78rem;font-weight:600;background:var(--alert);color:#fff;padding:3px 8px;border-radius:3px;white-space:nowrap}
 .bc{grid-column:1/-1;height:34px;margin-top:8px;max-width:100%}
 .bc rect{fill:var(--ink)}
-@media (max-width:520px){.band{grid-template-columns:1fr}.band .pic{height:90px}.band .info{grid-template-columns:1fr}.alert{justify-self:start}}
+@media (max-width:600px){.band{grid-template-columns:92px 1fr}.band .info{grid-template-columns:1fr;padding:12px 12px 10px}.pt{font-size:1.85rem}.pt small{font-size:.8rem;letter-spacing:.06em}.alert{justify-self:start}.facts{gap:2px 14px}}
 
 /* summary text: one printed face for clinical + plain, pen for the one-liner */
 .q{display:flex;flex-direction:column;gap:12px}
@@ -171,7 +179,13 @@ mark.hl{background:var(--marker)}
 .board{--mw:240px;position:relative;border-radius:6px;padding:6px 14px 10px;background:#eef5fb}
 .board .tbl th{border-bottom-color:var(--cb)}
 .board .me{position:absolute;right:0;width:var(--mw);height:auto;top:calc(var(--mw) * -.804 + 1px);z-index:2;pointer-events:none}
-@media (max-width:600px){.peek,.board{--mw:150px}.peek{padding-right:calc(var(--mw) + 8px)}.board .me{right:-4px}}
+@media (max-width:600px){
+  .peek,.board{--mw:150px}
+  .peek{padding-right:0;min-height:0;justify-content:flex-start}
+  .peek .legend-codes{order:1}
+  .peek .peek-note{order:2;min-height:calc(var(--mw) * .804 - 22px);padding-right:calc(var(--mw) + 6px);display:flex;align-items:center;font-size:.9rem}
+  .board .me{right:-4px}
+}
 .legend-codes{display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--muted);padding:8px 12px;border:1px dashed var(--form-soft)}
 .lc-grid{display:grid;grid-auto-flow:column;grid-template-rows:auto auto;justify-content:start;gap:6px 16px}
 .lc-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
@@ -222,6 +236,7 @@ mark.hl{background:var(--marker)}
 
 /* lab results */
 .filt{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:.9rem}
+@media (max-width:600px){.filt > .lbl{flex-basis:100%}}
 .filt button{background:none;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px}
 .filt button[aria-pressed="true"] .box::after{content:"✓";font-family:var(--f-pen);font-size:1.5rem;line-height:1;color:var(--check);transform:translate(1px,-3px) rotate(-6deg)}
 .res td.r{font-family:var(--f-data);font-size:.8rem;white-space:nowrap}
@@ -355,7 +370,7 @@ mark.hl{background:var(--marker)}
   <nav class="tabs" aria-label="Pages">
     <a href="#intake" data-go="intake" style="--paper:var(--sky)"><span>1</span>Intake</a>
     <a href="#history" data-go="history" style="--paper:var(--canary)"><span>2</span>History</a>
-    <a href="#research" data-go="research" style="--paper:var(--pink)"><span>3</span>Assessment &amp; Plan</a>
+    <a href="#research" data-go="research" style="--paper:var(--pink)"><span>3</span><b class="long">Assessment &amp; Plan</b><b class="short">Plan</b></a>
     <a href="#results" data-go="results" style="--paper:var(--green)"><span>4</span>Results</a>
   </nav>
 
@@ -696,6 +711,7 @@ mark.hl{background:var(--marker)}
   /* every page the same height as the tallest */
   function equalize(){
     var sheets=[].slice.call(document.querySelectorAll('.sheet')), max=0;
+    if(window.innerWidth<=600){sheets.forEach(function(sh){sh.style.minHeight=''});return;}
     sheets.forEach(function(sh){
       var was=sh.hidden; sh.style.minHeight='0';
       if(was){sh.hidden=false;sh.style.visibility='hidden';sh.style.position='absolute';sh.style.width=document.querySelector('.wrap').clientWidth-parseFloat(getComputedStyle(document.querySelector('.wrap')).paddingLeft)-parseFloat(getComputedStyle(document.querySelector('.wrap')).paddingRight)+'px'}
