@@ -133,7 +133,9 @@ mark.hl{background:var(--marker)}
 .gflag{font-family:var(--f-data);font-size:.72rem;font-weight:600;margin-left:6px;display:inline-block;min-width:4.5em}
 .cell.lo + .gflag{color:#2e7d4a}
 .cell.hi + .gflag{color:var(--check)}
-.vas-note{font-size:.74rem;color:var(--muted)}
+.vas-note{font-size:.74rem;color:var(--muted);min-height:2.4em}
+.vas-note.warn{color:var(--check)}
+.vas-note b{font-weight:700}
 .vas-row{display:grid;grid-template-columns:30px 1fr 30px;gap:10px;align-items:center}
 .vas-row svg.face{width:30px;height:30px;color:var(--form)}
 .scale{position:relative;height:84px;cursor:pointer;touch-action:manipulation}
@@ -427,7 +429,7 @@ mark.hl{background:var(--marker)}
             <svg class="face" viewBox="0 0 30 30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="15" cy="15" r="12.5"/><path d="M8.5 11 l3.5 1.5 M21.5 11 l-3.5 1.5"/><path d="M9.5 21 Q12 18.5 15 20 Q18 21.5 20.5 19"/></svg>
           </div>
           <div class="vas-ends"><span>Easy to read</span><span>Hard to read</span></div>
-          <div class="vas-note">Patient materials usually aim for grade 6 or lower.</div>
+          <div class="vas-note" id="vasNote">Patient materials usually aim for grade 6 or lower.</div>
         </div>
       </div>
     </div>
@@ -627,7 +629,7 @@ mark.hl{background:var(--marker)}
     {name:'One line', pos:'up', html:'I help AI explain health to people.'}
   ];
   var body=document.getElementById('body'), gloss=document.getElementById('gloss'), grade=document.getElementById('grade'),
-      scale=document.getElementById('scale'), gflag=document.getElementById('gflag'), xm=document.getElementById('xmark'), MAX=20;
+      scale=document.getElementById('scale'), gflag=document.getElementById('gflag'), vasNote=document.getElementById('vasNote'), xm=document.getElementById('xmark'), MAX=20;
   function syl(w){w=w.toLowerCase().replace(/[^a-z]/g,'');if(!w)return 0;if(w.length<=3)return 1;
     w=w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,'').replace(/^y/,'');var m=w.match(/[aeiouy]{1,2}/g);return m?m.length:1}
   function fk(t){var s=(t.match(/[.!?]+(\s|$)/g)||[1]).length;var ws=t.split(/\s+/).filter(function(x){return /[a-z]/i.test(x)});
@@ -652,7 +654,9 @@ mark.hl{background:var(--marker)}
     stops.forEach(function(b,k){b.setAttribute('aria-pressed',String(k===i))});
     grade.textContent=L.g.toFixed(1);
     grade.className='cell '+(L.g<=6?'lo':(L.g>=9?'hi':''));
-    gflag.textContent=L.g<=6?'\u2713 target':(L.g>=9?'H':'');
+    gflag.textContent=L.g<=6?(i===2?'\u2713 target*':'\u2713 target'):(L.g>=9?'H':'');
+    vasNote.innerHTML=i===2?'<b>*</b> The lowest grade here, but most details are left out. A low score does not mean nothing was lost.':'Patient materials usually aim for grade 6 or lower.';
+    vasNote.classList.toggle('warn',i===2);
     function apply(){
       body.className='lines'+(i===2?' l2':''); body.innerHTML=L.html;
       gloss.classList.toggle('off', i!==0); gloss.textContent='Tap a dotted term to decode it.';
