@@ -357,7 +357,9 @@ body.is-plain .tabs{display:none}
 .plain .pubs-plain li{margin:0;padding:10px 0;border-bottom:1px solid var(--form-soft)}
 .plain .pubs-plain .when{display:block}
 .plain .ptitle{display:block;font-weight:700;color:var(--form);line-height:1.35;margin-top:2px}
-.plain .inshort{display:block;margin-top:4px;font-size:.95rem;color:var(--muted)}
+.plain .pvenue{display:block;font-size:.92rem;color:var(--muted);margin-top:2px}
+.plain .pvenue b{color:var(--ink);font-weight:600}
+.plain .inshort{display:block;margin-top:4px;font-size:.95rem}
 .plain .inshort b{color:var(--form);font-weight:600}
 .plain details{margin-top:4px}
 .plain summary{cursor:pointer;font-family:var(--f-data);font-size:.76rem;color:var(--form)}
@@ -779,7 +781,7 @@ body.is-plain .tabs{display:none}
     h+='<h2>What I study</h2><ul>'+study.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>';
     h+='<h2>What I am working on now</h2><ul>'+now.map(function(n){return '<li><b>'+n[0]+':</b> '+n[1]+'</li>'}).join('')+'</ul>';
     var KINDP={Talk:'Talk',Paper:'Paper',Poster:'Poster'};
-    h+='<h2>Papers and talks</h2><ul class="pubs-plain">'+WORKS.map(function(w,i){return '<li><span class="when">'+w.d+' · '+(KINDP[w.k]||w.k)+' · '+w.s+'</span><span class="ptitle">'+w.t+'</span><span class="inshort"><b>In short:</b> '+(PLAIN_PUBS[i]||'')+'</span><details><summary>Authors and venue</summary><p class="meta">'+w.v+'</p></details></li>'}).join('')+'</ul>';
+    h+='<h2>Papers and talks</h2><ul class="pubs-plain">'+WORKS.map(function(w,i){return '<li><span class="when">'+w.d+' · '+(KINDP[w.k]||w.k)+' · '+w.s+'</span><span class="ptitle">'+w.t+'</span><span class="pvenue">'+w.v+'</span><details><summary>In plain words</summary><p class="inshort">'+(PLAIN_PUBS[i]||'')+'</p></details></li>'}).join('')+'</ul>';
     h+='<h2>Where I have worked and studied</h2><ul>'+[].map.call(document.querySelectorAll('#hist tbody tr:not(.fold-row)'),function(r){return '<li><span class="when">'+txt(r.querySelector('td.d'))+'</span> '+plainify(txt(r.querySelector('.e')))+'<span class="meta">, '+plainify(txt(r.querySelector('.w')))+'</span></li>'}).join('')+'</ul>';
     h+='<h2>Awards and certificates</h2><ul>'+[].map.call(document.querySelectorAll('#v-results .sec .tbl tr'),function(r){var t=r.querySelectorAll('td');return '<li><span class="when">'+txt(t[0])+'</span> '+txt(t[1])+'<span class="meta">, '+txt(t[2])+'</span></li>'}).join('')+'</ul>';
     h+='<h2>Skills</h2><ul><li><b>Research:</b> reviewing many studies, planning how people rate AI writing, checking that raters agree</li><li><b>Coding:</b> Python, R, SQL, HTML/CSS</li><li><b>Languages:</b> Korean and English</li></ul>';
