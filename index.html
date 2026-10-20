@@ -779,7 +779,7 @@ body.is-plain .tabs{display:none}
     h+='<p class="pf-grade">This page is written in plain words. The plain parts read at about grade <b style="color:'+(fk(plainText)<=6?'#2e7d4a':'var(--form)')+'">'+fk(plainText).toFixed(1)+'</b> (Flesch-Kincaid, computed live).</p>';
     h+='<div class="p-head"><img src="id.jpg" alt="Minseo Kim"><div><h1>Minseo Kim <span class="meta" style="font-size:1rem;font-weight:400">김민서</span></h1><p class="meta" style="margin:4px 0 0">Master\u2019s student, UNC Chapel Hill</p></div></div>';
     h+='<p>'+intro+'</p>';
-    h+='<p>Email: minseo82@unc.edu &nbsp;·&nbsp; <a href="cv.pdf" target="_blank" rel="noopener">CV (PDF)</a></p>';
+    h+='<p>Email: minseo82@unc.edu &nbsp;·&nbsp; <a href="cv.pdf" target="_blank" rel="noopener">CV (PDF)</a> &nbsp;·&nbsp; <a href="https://www.linkedin.com/in/minseo-kim-772270325" target="_blank" rel="noopener">LinkedIn</a></p>';
     h+='<h2>What I study</h2><ul>'+study.map(function(x){return '<li>'+x+'</li>'}).join('')+'</ul>';
     h+='<h2>What I am working on now</h2><ul>'+now.map(function(n){return '<li><b>'+n[0]+':</b> '+n[1]+'</li>'}).join('')+'</ul>';
     var KINDP={Talk:'Talk',Paper:'Paper',Poster:'Poster'};
