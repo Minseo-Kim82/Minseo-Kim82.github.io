@@ -1,0 +1,715 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Minseo Kim, MSIS student at UNC Chapel Hill, studying whether AI-written health information makes sense to patients.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px system-ui,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>Minseo Kim</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Condensed:wght@400;600;700&family=IBM+Plex+Mono:wght@400;600&family=Caveat:wght@600&display=swap">
+<style>
+/* Layout: a hospital form packet. One sheet on a desk; tabs are the carbonless copies (white, canary, pink, green), one per page.
+   Deliberately single-theme: printed paper. Navy form text, Carolina Blue rules, red pen for marks. */
+:root{
+  --desk:#d9dedf;
+  --white:#fdfdfb; --canary:#fbe7a1; --pink:#f7d3d9; --green:#cfe8ca; --sky:#d3e6f4;
+  --ink:#1b1d1f;
+  --form:#13294b;       /* printed form text: UNC navy */
+  --cb:#68aad9;         /* Carolina Blue: rules and section bands */
+  --form-soft:rgba(75,140,195,.45);
+  --alert:#a2463b;
+  --muted:#5f6366;
+  --marker:#ffe67a;
+  --pen:#232323;
+  --check:#bf4339;      /* red pen */
+  --f-form:"IBM Plex Sans Condensed", "Arial Narrow", sans-serif;
+  --f-data:"IBM Plex Mono", ui-monospace, "Menlo", monospace;
+  --f-pen:"Caveat", "Bradley Hand", cursive;
+  color-scheme:light;
+}
+*{box-sizing:border-box}
+body{background:var(--desk);color:var(--ink);font-family:var(--f-form);font-size:16px;line-height:1.5}
+button,input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--form);outline-offset:2px}
+.wrap{max-width:860px;margin:0 auto;padding-block:28px 56px;
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+
+/* copy tabs */
+.tabs{display:flex;gap:4px;flex-wrap:wrap;padding-left:10px}
+.tabs a{font-weight:600;font-size:.82rem;text-decoration:none;color:var(--ink);
+  background:var(--paper);padding:8px 14px 10px;border-radius:6px 6px 0 0;transform:translateY(5px);
+  box-shadow:0 -1px 0 rgba(0,0,0,.08) inset;transition:transform .15s ease}
+.tabs a:hover{transform:translateY(1px)}
+.tabs a[aria-current="page"]{transform:translateY(0)}
+.tabs a span{font-family:var(--f-data);font-weight:400;color:var(--form);margin-right:6px}
+@media (prefers-reduced-motion:reduce){.tabs a{transition:none}}
+
+.sheet{position:relative;background:var(--paper);border-radius:2px;box-shadow:0 1px 0 rgba(0,0,0,.06), 0 18px 40px -22px rgba(0,0,0,.45);
+  padding:26px clamp(16px,4.5vw,40px) 34px;display:flex;flex-direction:column}
+.sheet > * + *{margin-top:22px}
+.sheet > .foot{margin-top:auto;padding-top:8px;border-top:1.5px solid var(--cb)}
+.sheet > .floor-block{margin-top:auto;padding-top:28px;padding-bottom:16px}
+.sheet > .floor-block + .foot{margin-top:0}
+.sheet[hidden]{display:none}
+
+.fhead{display:grid;grid-template-columns:1fr auto;gap:6px 20px;align-items:end;border-bottom:3px solid var(--cb);padding-bottom:8px;color:var(--form)}
+.fhead > *{min-width:0}
+.fhead .org{font-weight:700;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase}
+.fhead h1{font-weight:700;font-size:clamp(1.3rem,4vw,1.75rem);line-height:1.1;margin:2px 0 0;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.fhead h1 .hl{background:linear-gradient(transparent 55%, var(--hlc) 55%, var(--hlc) 92%, transparent 92%);padding:0 .12em;margin:0 -.12em;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+.fhead .no{font-family:var(--f-data);font-size:.72rem;text-align:right;line-height:1.4}
+@media (max-width:520px){.fhead{grid-template-columns:1fr}.fhead .no{text-align:left}}
+
+.sec{border:1.5px solid var(--cb)}
+.sec-t{background:var(--cb);color:var(--form);font-weight:700;font-size:.82rem;letter-spacing:.08em;text-transform:uppercase;padding:3px 10px}
+.sec-b{padding:14px 14px 16px}
+.lbl{display:block;font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--form)}
+.data{font-family:var(--f-data);font-size:.95rem}
+
+/* stamp */
+.stamp{color:var(--check);mix-blend-mode:multiply;opacity:.9}
+.stamp-top{position:absolute;top:4px;right:clamp(96px,19vw,160px);width:96px;height:96px;transform:rotate(-12deg);pointer-events:none}
+@media (max-width:520px){.stamp-top{width:72px;height:72px;right:8px;top:-10px}}
+.stampline{min-height:6rem;align-items:center}
+.stampline svg{width:88px;height:88px;transform:rotate(-8deg) translateY(12px)}
+
+/* wristband */
+.band{display:grid;grid-template-columns:96px 1fr;background:#fff;border-radius:12px;overflow:hidden;
+  box-shadow:0 1px 0 rgba(0,0,0,.08), 0 6px 14px -8px rgba(0,0,0,.35);border:1px solid #e3e3e3}
+.band .pic{background:#eceeee;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:1.8rem;color:var(--muted);min-height:100%}
+.band .pic img{width:100%;height:100%;object-fit:cover}
+.band .info{padding:14px 18px 12px;min-width:0;display:grid;grid-template-columns:1fr auto;gap:4px 16px;align-items:start}
+.band .info > *{min-width:0}
+.pt{font-weight:700;font-size:clamp(2.2rem,8vw,3.6rem);line-height:.95;letter-spacing:-.01em;text-transform:uppercase}
+.pt small{display:block;font-size:.95rem;letter-spacing:.12em;font-weight:400;color:var(--muted);margin-top:8px;text-transform:none}
+.facts{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:4px 22px;font-family:var(--f-data);font-size:.78rem;margin-top:10px}
+.facts b{font-weight:600}
+.alert{font-family:var(--f-data);font-size:.78rem;font-weight:600;background:var(--alert);color:#fff;padding:3px 8px;border-radius:3px;white-space:nowrap}
+.bc{grid-column:1/-1;height:34px;margin-top:8px;max-width:100%}
+.bc rect{fill:var(--ink)}
+@media (max-width:520px){.band{grid-template-columns:1fr}.band .pic{height:90px}.band .info{grid-template-columns:1fr}.alert{justify-self:start}}
+
+/* summary text: one printed face for clinical + plain, pen for the one-liner */
+.q{display:flex;flex-direction:column;gap:12px}
+.lines{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent calc(1.9rem - 1px),var(--form-soft) calc(1.9rem - 1px),var(--form-soft) 1.9rem);
+  line-height:1.9rem;min-height:calc(1.9rem * 4);padding:0 2px;font-family:var(--f-data);font-size:.92rem;transition:opacity .15s}
+.lines.fade{opacity:0}
+.lines.l2{font-family:var(--f-pen);font-size:2.1rem;color:var(--pen);line-height:1.9rem;padding-top:.2rem}
+mark{color:inherit;padding:0 2px;-webkit-box-decoration-break:clone;box-decoration-break:clone}
+mark.j{background:var(--pink);border-bottom:1.5px dotted var(--form);cursor:help}
+mark.hl{background:var(--marker)}
+.gloss{font-size:.9rem;color:var(--muted);min-height:1.4em}
+.gloss.off{visibility:hidden}
+.gloss b{color:var(--ink)}
+@media (prefers-reduced-motion:reduce){.lines{transition:none}}
+
+/* visual analog scale */
+.vas{display:flex;flex-direction:column;gap:6px}
+.vas-head{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:6px 14px}
+.cell{border:1.5px solid var(--cb);padding:1px 10px;font-family:var(--f-data);font-size:1.15rem;font-weight:600;font-variant-numeric:tabular-nums;min-width:4.2rem;text-align:center;color:var(--form)}
+.cell.lo{color:#2e7d4a;border-color:#2e7d4a}
+.cell.hi{color:var(--check);border-color:var(--check)}
+.gflag{font-family:var(--f-data);font-size:.72rem;font-weight:600;margin-left:6px;display:inline-block;min-width:4.5em}
+.cell.lo + .gflag{color:#2e7d4a}
+.cell.hi + .gflag{color:var(--check)}
+.vas-note{font-size:.74rem;color:var(--muted)}
+.vas-row{display:grid;grid-template-columns:30px 1fr 30px;gap:10px;align-items:center}
+.vas-row svg.face{width:30px;height:30px;color:var(--form)}
+.scale{position:relative;height:84px;cursor:pointer;touch-action:manipulation}
+.scale::before{content:"";position:absolute;left:0;right:0;top:50%;height:2px;margin-top:-1px;background:var(--form)}
+.scale::after{content:"";position:absolute;left:0;right:0;top:50%;height:12px;margin-top:-6px;
+  background:repeating-linear-gradient(to right,var(--form) 0 1.5px,transparent 1.5px 5%);
+  -webkit-mask:linear-gradient(#000,#000);opacity:.55}
+.stop{position:absolute;transform:translateX(-50%);background:none;border:0;padding:2px 4px;cursor:pointer;
+  font-size:.78rem;font-weight:600;color:var(--muted);white-space:nowrap;display:flex;flex-direction:column;align-items:center;gap:2px}
+.stop.up{top:0}
+.stop.down{bottom:0;flex-direction:column-reverse}
+.stop i{display:block;width:1.5px;height:12px;background:var(--form);opacity:.6}
+.stop[aria-pressed="true"]{color:var(--form)}
+.stop .g{font-family:var(--f-data);font-weight:400;font-size:.7rem}
+.xmark{position:absolute;top:50%;width:26px;height:26px;transform:translate(-50%,-50%) rotate(-6deg);pointer-events:none;color:var(--check);transition:left .35s cubic-bezier(.3,.7,.2,1)}
+.vas-ends{display:flex;justify-content:space-between;font-size:.74rem;color:var(--muted);padding:0 2px}
+@media (prefers-reduced-motion:reduce){.xmark{transition:none}}
+
+/* routing slip */
+.route{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.route a{display:flex;flex-direction:column;gap:2px;text-decoration:none;color:var(--ink);background:var(--c);padding:10px 12px;border:1px solid rgba(0,0,0,.08);min-width:0}
+.route a b{font-weight:700}
+.route a span{font-size:.82rem;color:var(--muted)}
+@media (max-width:560px){.route{grid-template-columns:1fr}}
+
+/* tables */
+.tbl{width:100%;border-collapse:collapse;font-size:.95rem}
+.tbl th{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--form);text-align:left;border-bottom:2px solid var(--cb);padding:6px 8px;font-weight:700}
+.tbl td{border-bottom:1px solid var(--form-soft);padding:8px 8px;vertical-align:top}
+.tbl td.d{font-family:var(--f-data);font-size:.8rem;white-space:nowrap;width:7.5rem}
+.tbl td.s{color:var(--muted);font-size:.88rem}
+.tbl tr.now td{background:linear-gradient(transparent 12%, var(--marker) 12%, var(--marker) 88%, transparent 88%)}
+.tbl tr.next td{font-style:italic}
+.tag{font-family:var(--f-data);font-size:.68rem;border:1px solid currentColor;padding:0 5px;margin-left:6px;color:var(--form);font-style:normal;white-space:nowrap}
+.scroll{overflow-x:auto}
+.tbl td.c{width:3.6rem}
+.tbl .e{font-weight:700;color:var(--form)}
+.tbl .w{display:block;font-size:.86rem;color:var(--muted)}
+.tbl .x{display:block;font-family:var(--f-data);font-size:.74rem;color:var(--ink);margin-top:2px}
+.code{display:inline-block;font-family:var(--f-data);font-size:.66rem;font-weight:600;padding:1px 5px;border:1.5px solid;line-height:1.3}
+.code.EDU{color:var(--form);border-color:var(--form)}
+.code.RES{color:var(--form);background:var(--cb);border-color:var(--cb)}
+.code.TCH{color:var(--check);border-color:var(--check)}
+.code.LIB{color:var(--muted);border-color:var(--muted);border-style:dashed}
+.code.SVC{color:#2e6b52;border-color:#2e6b52}
+.code.TALK{background:var(--form);color:#fff;border-color:var(--form)}
+.code.PAPER{color:var(--form);border-color:var(--form)}
+.code.POSTER{background:var(--cb);color:var(--form);border-color:var(--cb)}
+.code.APP{color:var(--check);border-color:var(--check)}
+.res td.c{width:4.8rem}
+.peek{--mw:240px;padding-right:calc(var(--mw) + 24px);min-height:calc(var(--mw) * .804 - 22px);display:flex;flex-direction:column;justify-content:flex-end;gap:10px}
+.peek-note{margin:0;font-size:.95rem}
+.board{--mw:240px;position:relative;border-radius:6px;padding:6px 14px 10px;background:#eef5fb}
+.board .tbl th{border-bottom-color:var(--cb)}
+.board .me{position:absolute;right:0;width:var(--mw);height:auto;top:calc(var(--mw) * -.804 + 1px);z-index:2;pointer-events:none}
+@media (max-width:600px){.peek,.board{--mw:150px}.peek{padding-right:calc(var(--mw) + 8px)}.board .me{right:-4px}}
+.legend-codes{display:flex;flex-direction:column;gap:6px;font-size:.78rem;color:var(--muted);padding:8px 12px;border:1px dashed var(--form-soft)}
+.lc-grid{display:grid;grid-auto-flow:column;grid-template-rows:auto auto;justify-content:start;gap:6px 16px}
+.lc-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.lc-reset{background:none;border:0;padding:0;cursor:pointer;font-family:var(--f-data);font-size:.72rem;color:var(--form);text-decoration:underline;text-underline-offset:3px;white-space:nowrap}
+.lc-grid > .lc{white-space:nowrap;background:none;border:0;padding:2px 4px;margin:-2px -4px;cursor:pointer;text-align:left;color:var(--muted);font-size:inherit;border-radius:3px}
+.lc-grid > .lc:hover{background:rgba(75,156,211,.12)}
+.lc-grid.filtering > .lc[aria-pressed="false"]{opacity:.38}
+.lc-grid > .lc[aria-pressed="true"]{color:var(--ink);font-weight:600}
+.hist-empty td{color:var(--muted)}
+#hist:not(.open) tr.early{display:none}
+#hist.filtering tr.early{display:table-row}
+#hist.filtering tr.fold-row{display:none}
+.fold-row td{padding:10px 8px;border-bottom:1px solid var(--form-soft)}
+.fold{background:none;border:1px dashed var(--cb);border-radius:4px;padding:6px 12px;cursor:pointer;font-family:var(--f-data);font-size:.78rem;color:var(--form);width:100%;text-align:left}
+.fold:hover{background:rgba(75,156,211,.1)}
+@media (max-width:600px){#hist.filtering tr.early{display:block}}
+.legend-codes .code{width:2.9rem;text-align:center;margin-right:6px}
+@media (max-width:760px){.lc-grid{grid-auto-flow:row;grid-template-rows:none}}
+.filt .code{margin-right:2px}
+@media (max-width:600px){
+  .tbl thead{display:none}
+  .tbl, .tbl tbody, .tbl tr, .tbl td{display:block;width:auto}
+  .tbl tr{border-bottom:1px solid var(--form-soft);padding:8px 0}
+  .tbl td{border:0;padding:2px 4px}
+  .tbl td.d{width:auto}
+  .tbl td.c, .tbl td.c + td.d{display:inline-block;vertical-align:middle}
+}
+
+/* SOAP */
+.soap{display:flex;flex-direction:column}
+.soap > div{display:grid;grid-template-columns:2.6rem 1fr;gap:0 14px;padding:14px 0;border-bottom:1px solid var(--form-soft)}
+.soap > div:last-child{border-bottom:0}
+.soap > div > *{min-width:0}
+.soap .L{font-weight:700;font-size:2rem;line-height:1;color:var(--form)}
+.soap .L small{display:block;font-size:.6rem;letter-spacing:.06em;text-transform:uppercase;margin-top:4px}
+.soap p{margin:0}
+.soap p + p{margin-top:6px}
+.box{width:20px;height:20px;border:1.5px solid var(--form);display:inline-flex;align-items:center;justify-content:center;flex:none;background:var(--white)}
+.chkl{list-style:none;margin:8px 0 0;padding:0;display:flex;flex-wrap:wrap;gap:8px 22px}
+.chkl li{display:flex;gap:8px;align-items:center}
+.chkl .box::after{content:"✓";font-family:var(--f-pen);font-size:1.5rem;line-height:1;color:var(--check);transform:translate(1px,-3px) rotate(-6deg)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 28px}
+.grid2 > *{min-width:0}
+@media (max-width:600px){.grid2{grid-template-columns:1fr}}
+.kv{display:grid;grid-template-columns:7.5rem 1fr;gap:4px 12px;font-size:.95rem}
+.kv dt{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--form);padding-top:3px}
+.kv dd{margin:0;font-family:var(--f-data);font-size:.86rem}
+
+/* lab results */
+.filt{display:flex;flex-wrap:wrap;gap:6px 20px;font-size:.9rem}
+.filt button{background:none;border:0;padding:0;cursor:pointer;display:flex;align-items:center;gap:7px}
+.filt button[aria-pressed="true"] .box::after{content:"✓";font-family:var(--f-pen);font-size:1.5rem;line-height:1;color:var(--check);transform:translate(1px,-3px) rotate(-6deg)}
+.res td.r{font-family:var(--f-data);font-size:.8rem;white-space:nowrap}
+.flag{display:inline-block;font-family:var(--f-data);font-weight:600;font-size:.75rem;width:1.5rem;text-align:center;border:1.5px solid currentColor;margin-right:6px}
+.flag.F{color:#22692d}.flag.P{color:var(--alert)}
+.res .t{font-weight:600}
+.res .v{display:block;font-size:.85rem;color:var(--muted)}
+.res .v b{color:var(--ink);font-weight:600}
+.groups{display:flex;flex-direction:column;gap:22px}
+.grp h3{margin:0 0 4px;font-size:.78rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--form);display:flex;align-items:center;gap:8px;border-bottom:2px solid var(--cb);padding-bottom:5px}
+.grp h3 .n{font-family:var(--f-data);font-weight:400;color:var(--muted)}
+.grp h3 .dot{width:9px;height:9px;border-radius:50%}
+.grp.ok h3 .dot{background:#2e7d4a}
+.grp.wait h3 .dot{background:var(--marker);box-shadow:0 0 0 1.5px #b8962a inset}
+.pubs{list-style:none;margin:0;padding:0}
+.pubs li{padding:11px 0;border-bottom:1px solid var(--form-soft)}
+.pubs .kind{font-family:var(--f-data);font-size:.74rem;color:var(--form)}
+.pubs .st{font-weight:600;padding:0 4px}
+.pubs .st.ok{color:#2e7d4a}
+.pubs .st.wait{background:var(--marker)}
+.pubs .t{display:block;font-weight:600;line-height:1.35;margin-top:1px}
+.pubs .v{display:block;font-size:.86rem;color:var(--muted);margin-top:2px}
+.pubs .v b{color:var(--ink);font-weight:600}
+
+.sig{display:grid;grid-template-columns:1fr 1fr;gap:18px 28px}
+.sig > div{min-width:0}
+.sig .line{border-bottom:1.5px solid var(--cb);min-height:2.4rem;display:flex;align-items:flex-end;padding:0 4px 2px;overflow-wrap:anywhere}
+@media (max-width:520px){.sig{grid-template-columns:1fr}}
+.attach{position:relative;align-self:flex-end;width:min(300px,100%);margin:28px 6px 30px 0;background:#fff;padding:10px 10px 12px;
+  box-shadow:0 1px 0 rgba(0,0,0,.06), 0 10px 22px -12px rgba(0,0,0,.45);transform:rotate(1.8deg)}
+.attach img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover;object-position:50% 30%}
+.attach figcaption{font-family:var(--f-data);font-size:.72rem;color:var(--muted);margin-top:8px}
+.clip{position:absolute;top:-16px;left:28px;width:16px;height:46px;border:2.5px solid #9aa2a8;border-radius:9px;border-bottom-color:#9aa2a8;transform:rotate(-8deg);background:transparent}
+.clip::after{content:"";position:absolute;inset:6px 2px 10px;border:2.5px solid #9aa2a8;border-radius:6px}
+@media (max-width:600px){.attach{align-self:center;transform:rotate(1deg)}}
+
+/* cut-out stickers of Minseo */
+.cut{display:block;height:auto;pointer-events:none;align-self:end;margin-bottom:-1px}
+.with-cut{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:0 18px;align-items:end}
+.with-cut.left{grid-template-columns:auto minmax(0,1fr)}
+.with-cut > *{min-width:0}
+.cut-point{width:150px}
+.cut-thumb{width:92px}
+.cut-cheer{width:132px}
+.cut-present{width:200px;margin-right:-12px}
+@media (max-width:600px){.with-cut,.with-cut.left{grid-template-columns:1fr}.cut{display:none}}
+.try{font-family:var(--f-pen);font-size:1.02rem;font-weight:600;letter-spacing:0;text-transform:none;color:var(--check);margin-left:10px;white-space:nowrap;opacity:.9}
+.try::before{content:"\2190  "}
+.recent{list-style:none;margin:0;padding:0}
+.recent li{display:grid;grid-template-columns:5.5rem 1fr;gap:0 12px;padding:7px 0;border-bottom:1px solid var(--form-soft)}
+.recent li:last-child{border-bottom:0}
+.recent li > *{min-width:0}
+.recent .d{font-family:var(--f-data);font-size:.8rem;color:var(--form);padding-top:2px}
+/* lobby: directory + next appointment, stretched to fill the sheet */
+.lobby{display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:18px;align-items:start;margin-bottom:26px}
+.lobby > .sec{display:flex;flex-direction:column}
+
+.dir-list{display:flex;flex-direction:column;padding-top:4px;padding-bottom:4px}
+.dir-list a{display:grid;grid-template-columns:3rem 1fr auto;align-items:center;gap:12px;text-decoration:none;color:var(--ink);padding:10px 4px;border-bottom:1px solid var(--form-soft);}
+.dir-list a:last-child{border-bottom:0}
+.dir-list .fl{font-family:var(--f-data);font-weight:600;font-size:1.05rem;color:var(--form);display:flex;align-items:center;gap:8px}
+.dir-list .fl::before{content:"";width:10px;height:10px;background:var(--c);border:1px solid rgba(19,41,75,.25);flex:none}
+.dir-list .dept{display:flex;flex-direction:column;min-width:0}
+.dir-list .dept b{font-weight:700;color:var(--form)}
+.dir-list .dept small{font-size:.82rem;color:var(--muted)}
+.dir-list .arr{color:var(--form);transition:transform .15s}
+.dir-list a:hover .dept b{text-decoration:underline;text-underline-offset:3px}
+.dir-list a:hover .arr{transform:translateX(3px)}
+@media (prefers-reduced-motion:reduce){.dir-list .arr{transition:none}}
+.appt{background:#fff;border:1.5px solid var(--cb);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;box-shadow:0 6px 14px -10px rgba(19,41,75,.35);transform:rotate(-1.2deg)}
+.appt-head{background:var(--cb);color:var(--form);font-weight:700;font-size:.74rem;letter-spacing:.1em;text-transform:uppercase;padding:5px 12px}
+.appt-body{padding:12px 16px 14px;display:flex;flex-direction:column;gap:12px}
+.appt-what{font-weight:700;font-size:1.1rem;color:var(--form);line-height:1.25;margin-top:2px}
+.appt-rows{display:grid;grid-template-columns:5.4rem 1fr;gap:6px 10px;margin:0}
+.appt-rows dt{font-size:.7rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--form);padding-top:2px}
+.appt-rows dd{margin:0;font-family:var(--f-data);font-size:.86rem;min-width:0;overflow-wrap:anywhere}
+.appt-rows a{color:var(--form)}
+.appt-contact{border-top:1px dashed var(--form-soft);padding-top:10px}
+.appt-note{margin:0;font-family:var(--f-pen);font-size:1.15rem;color:var(--pen);line-height:1.1}
+@media (max-width:600px){.lobby{grid-template-columns:1fr}.appt{transform:none}}
+.olist{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.olist li{display:grid;grid-template-columns:4.2rem 1fr;gap:10px}
+.olist b{font-size:.7rem;letter-spacing:.08em;text-transform:uppercase;color:var(--form);padding-top:3px}
+.fields{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.fields > div{display:flex;flex-direction:column;gap:6px;padding:10px 14px 12px;border-left:1px solid var(--form-soft);min-width:0}
+.fields > div:first-child{border-left:0}
+.fields .data{font-size:.84rem;line-height:1.55}
+@media (max-width:600px){.fields{grid-template-columns:1fr}.fields > div{border-left:0;border-top:1px solid var(--form-soft)}.fields > div:first-child{border-top:0}}
+.foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;font-family:var(--f-data);font-size:.7rem;color:var(--form)}
+</style>
+</head>
+<body>
+
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <filter id="ink" x="-10%" y="-10%" width="120%" height="120%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="n"/>
+      <feColorMatrix in="n" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -2.2 2.05" result="m"/>
+      <feComposite in="SourceGraphic" in2="m" operator="in" result="speck"/>
+      <feTurbulence type="turbulence" baseFrequency="0.04" numOctaves="1" seed="3" result="w"/>
+      <feDisplacementMap in="speck" in2="w" scale="1.6"/>
+    </filter>
+    <path id="ring" d="M50,50 m-38,0 a38,38 0 1,1 76,0 a38,38 0 1,1 -76,0"/>
+    <symbol id="stamp" viewBox="0 0 100 100">
+      <g filter="url(#ink)" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="50" cy="50" r="47" stroke-width="2.6"/>
+        <circle cx="50" cy="50" r="31" stroke-width="1.4"/>
+        <text fill="currentColor" stroke="none" font-family="IBM Plex Sans Condensed, Arial Narrow, sans-serif" font-weight="700" font-size="9" textLength="230" lengthAdjust="spacing"><textPath href="#ring">MINSEO KIM • UNC CHAPEL HILL • READABLE •</textPath></text>
+        <path d="M31,81 Q33,68 44,66 L56,66 Q67,68 69,81" stroke-width="1.8"/>
+        <path d="M43.5,66 Q50,72.5 56.5,66" stroke-width="1.4"/>
+        <path d="M47.6,69.5 l0,4.5 M52.4,69.5 l0,4.5" stroke-width="1"/>
+        <path d="M36,53 Q35,34 50,33.5 Q65,34 64,53 L65.5,75 Q61,78 58.5,73 L59.2,51 Q57,41.5 50,40.5 Q43,41.5 40.8,51 L41.5,73 Q39,78 34.5,75 Z" fill="currentColor" stroke="none"/>
+        <path d="M50,34.5 L50,40" stroke="#fff" stroke-width="0.9"/>
+        <circle cx="50" cy="52" r="9.8" stroke-width="1.6"/>
+        <circle cx="45.7" cy="52.4" r="3.3" stroke-width="1.1"/>
+        <circle cx="54.3" cy="52.4" r="3.3" stroke-width="1.1"/>
+        <path d="M49,52.2 Q50,51.4 51,52.2" stroke-width="1"/>
+        <circle cx="45.7" cy="52.6" r="0.9" fill="currentColor" stroke="none"/>
+        <circle cx="54.3" cy="52.6" r="0.9" fill="currentColor" stroke="none"/>
+        <path d="M46.6,57 Q50,61.2 53.4,57 Z" fill="currentColor" stroke-width="0.8"/>
+        <path d="M37.5,81 L40.5,72 L59.5,72 L62.5,81 Z" fill="#fff" stroke-width="1.4"/>
+        <circle cx="55.5" cy="76.5" r="1.2" fill="currentColor" stroke="none"/>
+        <path d="M29,44 l0,5 M26.5,46.5 l5,0 M71,40 l0,4 M69,42 l4,0" stroke-width="1.1"/>
+      </g>
+    </symbol>
+  </defs>
+</svg>
+
+<div class="wrap">
+  <nav class="tabs" aria-label="Pages">
+    <a href="#intake" data-go="intake" style="--paper:var(--sky)"><span>1</span>Intake</a>
+    <a href="#history" data-go="history" style="--paper:var(--canary)"><span>2</span>History</a>
+    <a href="#research" data-go="research" style="--paper:var(--pink)"><span>3</span>Assessment &amp; Plan</a>
+    <a href="#results" data-go="results" style="--paper:var(--green)"><span>4</span>Results</a>
+  </nav>
+
+  <!-- 1. INTAKE -->
+  <section class="sheet" id="v-intake" style="--paper:var(--white);--hlc:var(--sky)">
+    <div class="fhead">
+      <div><div class="org">UNC Chapel Hill · School of Data and Information Sciences</div><h1><span class="hl">Researcher intake form</span></h1></div>
+      <div class="no">FORM MK-01<br>PAGE 1 OF 4</div>
+    </div>
+    <svg class="stamp stamp-top" viewBox="0 0 100 100" role="img" aria-label="Stamp with a drawing of Minseo"><use href="#stamp"/></svg>
+
+    <div class="band" aria-label="Wristband">
+      <!-- Replace MK with <img src="..." alt="Minseo Kim"> -->
+      <div class="pic"><img src="id.jpg" alt="Minseo Kim" style="object-position:50% 20%"></div>
+      <div class="info">
+        <div class="pt">Kim, Minseo<small>김민서 · MSIS, UNC Chapel Hill</small></div>
+        <span class="alert">ALLERGY: JARGON</span>
+        <div class="facts">
+          <span><b>DEPT</b> SDIS</span>
+          <span><b>ADVISOR</b> D. T.Y. Wu, PhD</span>
+          <span><b>LOC</b> Chapel Hill, NC</span>
+        </div>
+        <svg class="bc" id="bc" viewBox="0 0 300 34" preserveAspectRatio="none" aria-hidden="true"></svg>
+      </div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-t">Section A · About the researcher</div>
+      <div class="sec-b q">
+        <span class="lbl">A1. Summary<span class="try">tap a dotted word</span></span>
+        <div class="lines" id="body" aria-live="polite"></div>
+        <div class="gloss" id="gloss">Tap a dotted term to decode it.</div>
+
+        <div class="vas">
+          <div class="vas-head">
+            <span class="lbl">A2. Mark a reading level on the line<span class="try">tap the line</span></span>
+            <span><span class="lbl" style="display:inline;margin-right:8px">FK grade</span><span class="cell" id="grade">0.0</span><span class="gflag" id="gflag"></span></span>
+          </div>
+          <div class="vas-row">
+            <svg class="face" viewBox="0 0 30 30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="15" cy="15" r="12.5"/><circle cx="10.5" cy="12" r="1" fill="currentColor"/><circle cx="19.5" cy="12" r="1" fill="currentColor"/><path d="M9.5 17.5 Q15 23 20.5 17.5"/></svg>
+            <div class="scale" id="scale" role="group" aria-label="Reading level scale, easy to hard">
+              <svg class="xmark" id="xmark" viewBox="0 0 26 26" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M5 6 L21 20"/><path d="M20 5 L6 21"/></svg>
+            </div>
+            <svg class="face" viewBox="0 0 30 30" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><circle cx="15" cy="15" r="12.5"/><path d="M8.5 11 l3.5 1.5 M21.5 11 l-3.5 1.5"/><path d="M9.5 21 Q12 18.5 15 20 Q18 21.5 20.5 19"/></svg>
+          </div>
+          <div class="vas-ends"><span>Easy to read</span><span>Hard to read</span></div>
+          <div class="vas-note">Patient materials usually aim for grade 6 or lower.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="lobby">
+      <div class="sec dir">
+        <div class="sec-t">Section B · Directory</div>
+        <nav class="sec-b dir-list" aria-label="Pages">
+          <a href="#history" data-go="history" style="--c:var(--canary)"><span class="fl">2F</span><span class="dept"><b>History</b><small>Timeline, newest first</small></span><span class="arr" aria-hidden="true">&rarr;</span></a>
+          <a href="#research" data-go="research" style="--c:var(--pink)"><span class="fl">3F</span><span class="dept"><b>Assessment &amp; Plan</b><small>Research and projects</small></span><span class="arr" aria-hidden="true">&rarr;</span></a>
+          <a href="#results" data-go="results" style="--c:var(--green)"><span class="fl">4F</span><span class="dept"><b>Results</b><small>Publications and awards</small></span><span class="arr" aria-hidden="true">&rarr;</span></a>
+        </nav>
+      </div>
+
+      <div class="appt" aria-label="Appointment card">
+        <div class="appt-head">Appointment card</div>
+        <div class="appt-body">
+          <div>
+            <span class="lbl">To schedule a conversation</span>
+            <div class="appt-what">Minseo Kim</div>
+          </div>
+          <dl class="appt-rows">
+            <dt>Email</dt><dd style="user-select:all">minseo82@unc.edu</dd>
+            <dt>CV</dt><dd><a href="cv.pdf" target="_blank" rel="noopener">Open PDF &#8599;</a></dd>
+            <dt>Office</dt><dd>SDIS, UNC Chapel Hill</dd>
+          </dl>
+          <p class="appt-note">Feel free to reach out anytime.</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot"><span>MK-01 REV 10/2026</span><span>PATIENT-FRIENDLY VERSION AVAILABLE ON REQUEST</span></div>
+  </section>
+
+  <!-- 2. HISTORY -->
+  <section class="sheet" id="v-history" style="--paper:var(--white);--hlc:var(--canary)" hidden>
+    <div class="fhead">
+      <div><div class="org">Kim, Minseo</div><h1><span class="hl">History</span></h1></div>
+      <div class="no">FORM MK-02<br>PAGE 2 OF 4</div>
+    </div>
+    <div class="peek">
+      <p class="peek-note">Newest first. The code on each line shows what kind of entry it is.</p>
+    <div class="legend-codes"><div class="lc-head"><span class="lbl">Codes<span class="try">tap a code to filter</span></span><button type="button" class="lc-reset" id="lcReset" hidden>Show all ×</button></div>
+      <div class="lc-grid">
+      <button type="button" class="lc" data-code="EDU" aria-pressed="false"><span class="code EDU">EDU</span> Education</button>
+      <button type="button" class="lc" data-code="LIB" aria-pressed="false"><span class="code LIB">LIB</span> Libraries &amp; archives</button>
+      <button type="button" class="lc" data-code="RES" aria-pressed="false"><span class="code RES">RES</span> Research</button>
+      <button type="button" class="lc" data-code="SVC" aria-pressed="false"><span class="code SVC">SVC</span> Service</button>
+      <button type="button" class="lc" data-code="TCH" aria-pressed="false"><span class="code TCH">TCH</span> Teaching</button>
+      </div>
+    </div>
+    </div>
+    <div class="board">
+      <img class="me" src="me_board.png" alt="Minseo leaning on the history board, pointing to herself">
+    <div class="scroll">
+      <table class="tbl" id="hist">
+        <thead><tr><th>Code</th><th>Date</th><th>Entry</th></tr></thead>
+        <tbody>
+          <tr class="next"><td class="c"><span class="code EDU">EDU</span></td><td class="d">Next</td><td><span class="e">PhD in Information Science</span><span class="w">Seeking</span></td></tr>
+          <tr><td class="c"><span class="code EDU">EDU</span></td><td class="d">Spring 2027</td><td><span class="e">MSIS completion (expected)</span><span class="w">UNC Chapel Hill</span></td></tr>
+          <tr class="now"><td class="c"><span class="code RES">RES</span></td><td class="d">Nov 2026</td><td><span class="e">Podium, AMIA 2026 Annual Symposium</span><span class="w">Dallas, TX</span></td></tr>
+          <tr><td class="c"><span class="code RES">RES</span></td><td class="d">Aug 2026</td><td><span class="e">Poster, IFLA WLIC 2026</span><span class="w">IFLA World Library and Information Congress</span></td></tr>
+          <tr><td class="c"><span class="code SVC">SVC</span></td><td class="d">Jul 2026</td><td><span class="e">Reviewer, AMIA Informatics Year-in-Review</span><span class="tag">ONGOING</span><span class="w">Visual Analytics Working Group</span></td></tr>
+          <tr><td class="c"><span class="code RES">RES</span></td><td class="d">Spring 2026</td><td><span class="e">Independent study: oncology discharge notes</span><span class="w">iCDCU Lab, UNC</span></td></tr>
+          <tr><td class="c"><span class="code TCH">TCH</span></td><td class="d">Spring 2026</td><td><span class="e">Graduate Teaching Assistant, DATA 120</span><span class="tag">ONGOING</span><span class="w">UNC Chapel Hill</span></td></tr>
+          <tr><td class="c"><span class="code TCH">TCH</span></td><td class="d">Mar 2026</td><td><span class="e">Guest lecture: AI basics and ethical AI in the classroom</span><span class="w">Bull City Schools</span></td></tr>
+          <tr><td class="c"><span class="code TCH">TCH</span></td><td class="d">Sep 2025</td><td><span class="e">Digital literacy volunteer teacher</span><span class="tag">ONGOING</span><span class="w">Community Workshop Series</span></td></tr>
+          <tr><td class="c"><span class="code SVC">SVC</span></td><td class="d">Sep 2025</td><td><span class="e">Student Ambassador</span><span class="tag">ONGOING</span><span class="w">School of Data and Information Sciences</span></td></tr>
+          <tr><td class="c"><span class="code EDU">EDU</span></td><td class="d">Aug 2025</td><td><span class="e">Began MSIS</span><span class="w">UNC Chapel Hill</span></td></tr>
+          <tr class="fold-row"><td colspan="3"><button type="button" class="fold" id="fold" aria-expanded="false">Show 8 earlier entries &middot; Korea, 2019 to 2025 <span aria-hidden="true">&darr;</span></button></td></tr>
+          <tr class="early"><td class="c"><span class="code LIB">LIB</span></td><td class="d">Mar 2025</td><td><span class="e">Intern, Restoration Management Division</span><span class="w">National Archives of Korea</span></td></tr>
+          <tr class="early"><td class="c"><span class="code TCH">TCH</span></td><td class="d">Apr 2022</td><td><span class="e">Student teacher, school library</span><span class="w">Songgok Girls&rsquo; High School, Seoul</span></td></tr>
+          <tr class="early"><td class="c"><span class="code SVC">SVC</span></td><td class="d">2022</td><td><span class="e">President, Humanities College Student Government</span><span class="w">Myongji University</span></td></tr>
+          <tr class="early"><td class="c"><span class="code LIB">LIB</span></td><td class="d">Aug 2021</td><td><span class="e">Trainee, Digital Initiatives Division</span><span class="w">National Library of Korea</span></td></tr>
+          <tr class="early"><td class="c"><span class="code LIB">LIB</span></td><td class="d">2021</td><td><span class="e">Weekend library assistant</span><span class="w">Seodaemun Public Library, Seoul</span></td></tr>
+          <tr class="early"><td class="c"><span class="code SVC">SVC</span></td><td class="d">2021</td><td><span class="e">President, Library and Information Science Student Government</span><span class="w">Myongji University</span></td></tr>
+          <tr class="early"><td class="c"><span class="code RES">RES</span></td><td class="d">Fall 2019</td><td><span class="e">Student researcher, comparative study of multi-complex libraries</span><span class="w">Myongji University</span></td></tr>
+          <tr class="early"><td class="c"><span class="code SVC">SVC</span></td><td class="d">2019 to 2020</td><td><span class="e">Vice President and freshman representative, LIS Student Government</span><span class="w">Myongji University</span></td></tr>
+          <tr class="degree"><td class="c"><span class="code EDU">EDU</span></td><td class="d">2019 to 2023</td><td><span class="e">B.L.S., Library Science</span><span class="w">Myongji University, Seoul</span><span class="x">GPA 4.25/4.50</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+    <div class="foot"><span>MK-02 REV 10/2026</span><span>HIGHLIGHTED = NEXT UPCOMING</span></div>
+  </section>
+
+  <!-- 3. ASSESSMENT & PLAN -->
+  <section class="sheet" id="v-research" style="--paper:var(--white);--hlc:var(--pink)" hidden>
+    <div class="fhead">
+      <div><div class="org">Kim, Minseo</div><h1><span class="hl">Research note (SOAP)</span></h1></div>
+      <div class="no">FORM MK-03<br>PAGE 3 OF 4</div>
+    </div>
+    <div class="soap">
+      <div><span class="L">S<small>Question</small></span><div><p>AI can rewrite clinical notes for patients. Do patients actually understand them?</p></div></div>
+      <div><span class="L">O<small>Current</small></span><div>
+        <ul class="olist">
+          <li><b>Thesis</b> Scoping review of human-centered evaluation for LLM clinical note summaries</li>
+          <li><b>Pilot</b> Evaluation design for AI-summarized oncology discharge notes</li>
+          <li><b>Project</b> FHIR Notes for Patients, a plain-language app prototype</li>
+        </ul>
+      </div></div>
+      <div><span class="L">A<small>Interests</small></span><div>
+        <ul class="chkl">
+          <li><span class="box"></span>Patient-facing AI summaries</li>
+          <li><span class="box"></span>Evaluation beyond automatic metrics</li>
+          <li><span class="box"></span>Health information literacy</li>
+          <li><span class="box"></span>Libraries as health information partners</li>
+        </ul>
+      </div></div>
+      <div><span class="L">P<small>Plan</small></span><div><p>Seeking a PhD in Information Science.</p></div></div>
+    </div>
+
+    <div class="sec">
+      <div class="sec-t">Section B · Skills</div>
+      <div class="fields">
+        <div><span class="lbl">Methods</span><span class="data">Scoping review<br>Annotation design<br>Inter-rater reliability</span></div>
+        <div><span class="lbl">Tools</span><span class="data">Python, R<br>SQL, HTML/CSS</span></div>
+        <div><span class="lbl">Languages</span><span class="data">Korean (native)<br>English (fluent)</span></div>
+      </div>
+    </div>
+    <figure class="attach">
+      <span class="clip" aria-hidden="true"></span>
+      <img src="library.jpg" alt="Minseo smiling at a library table with a laptop, wearing a Carolina Blue hoodie">
+      <figcaption>Attachment 1 · In the library</figcaption>
+    </figure>
+    <div class="foot"><span>MK-03 REV 10/2026</span><span>FULL DETAILS IN RESEARCH STATEMENT</span></div>
+  </section>
+
+  <!-- 4. RESULTS -->
+  <section class="sheet" id="v-results" style="--paper:var(--white);--hlc:var(--green)" hidden>
+    <div class="fhead">
+      <div><div class="org">Kim, Minseo</div><h1><span class="hl">Results: publications &amp; presentations</span></h1></div>
+      <div class="no">FORM MK-04<br>PAGE 4 OF 4</div>
+    </div>
+    <div class="with-cut">
+    <div class="filt" id="filt" style="align-self:center">
+      <span class="lbl" style="align-self:center">Show<span class="try">check to filter</span></span>
+      <button type="button" data-f="Talk" aria-pressed="true"><span class="box"></span>Talks</button>
+      <button type="button" data-f="Paper" aria-pressed="true"><span class="box"></span>Papers</button>
+      <button type="button" data-f="Poster" aria-pressed="true"><span class="box"></span>Posters</button>
+    </div>
+    </div>
+    <div id="rows" class="groups"></div>
+
+    <div class="sec" style="margin-top:48px">
+      <div class="sec-t">Awards and certificates</div>
+      <div class="sec-b scroll">
+        <table class="tbl">
+          <tbody>
+            <tr><td class="d">May 2026</td><td>Certificate for Digital Literacy Instruction</td><td class="s">Community Workshop Series</td></tr>
+            <tr><td class="d">Apr 2026</td><td>Student Delegation Funding, ALA 2026 Annual Conference</td><td class="s">UNC SILS</td></tr>
+            <tr><td class="d">Oct 2025</td><td>Student Delegation Funding, NCLA 2025 Conference</td><td class="s">UNC SILS</td></tr>
+            <tr><td class="d">2023</td><td>Librarian Certificate and Librarian Teacher Certificate (Grade II)</td><td class="s">Korea</td></tr>
+            <tr><td class="d">2020 to 2022</td><td>Full-Tuition Merit-Based Scholarship with High Honors</td><td class="s">Asan Foundation</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="foot"><span>MK-04 REV 10/2026</span><span>RETAIN FOR YOUR RECORDS</span></div>
+  </section>
+</div>
+
+<script>
+(function(){
+  /* pages */
+  var MAP={intake:'v-intake',history:'v-history',research:'v-research',results:'v-results'};
+  function go(v,scroll){
+    if(!MAP[v]) v='intake';
+    Object.keys(MAP).forEach(function(k){document.getElementById(MAP[k]).hidden=(k!==v)});
+    [].forEach.call(document.querySelectorAll('.tabs a'),function(a){
+      if(a.dataset.go===v) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+    });
+    if(scroll) window.scrollTo(0,0);
+  }
+  document.addEventListener('click',function(e){
+    var a=e.target.closest('a[data-go]'); if(!a) return;
+    e.preventDefault(); go(a.dataset.go,true);
+    try{history.pushState(null,'','#'+a.dataset.go)}catch(_){}
+  });
+  window.addEventListener('hashchange',function(){go(location.hash.slice(1),true)});
+  window.addEventListener('popstate',function(){go(location.hash.slice(1),true)});
+  go(location.hash.slice(1),false);
+
+  /* barcode from the name */
+  var bc=document.getElementById('bc'), s='KIM MINSEO SDIS UNC', x=0, out='';
+  for(var i=0;i<s.length && x<300;i++){
+    var c=s.charCodeAt(i);
+    for(var k=0;k<4 && x<300;k++){var w=1+((c>>k)&1)+((c>>(k+3))&1); out+='<rect x="'+x+'" y="0" width="'+w+'" height="34"/>'; x+=w+1+((c>>(k+1))&1)*2;}
+  }
+  bc.innerHTML=out;
+
+  /* reading levels */
+  var LEVELS=[
+    {name:'Clinical', pos:'up', html:'Pt is a Korea-trained <mark class="j" data-g="Library and Information Science">LIS</mark> professional, currently <mark class="j" data-g="Master of Science in Information Science">MSIS</mark> candidate at UNC Chapel Hill. Focus: <mark class="j" data-g="judging AI summaries by how people read and use them, not only by automatic scores">human-centered evaluation</mark> of <mark class="j" data-g="large language model">LLM</mark>-generated <mark class="j" data-g="AI rewrites of doctors’ notes from a hospital stay">clinical note summarization</mark> for patient-facing use.'},
+    {name:'Plain', pos:'down', html:'I trained as a librarian. Now I study at UNC Chapel Hill. AI can rewrite doctors’ notes for patients. I check if patients <mark class="hl">really understand</mark> them.'},
+    {name:'One line', pos:'up', html:'I help AI explain health to people.'}
+  ];
+  var body=document.getElementById('body'), gloss=document.getElementById('gloss'), grade=document.getElementById('grade'),
+      scale=document.getElementById('scale'), gflag=document.getElementById('gflag'), xm=document.getElementById('xmark'), MAX=20;
+  function syl(w){w=w.toLowerCase().replace(/[^a-z]/g,'');if(!w)return 0;if(w.length<=3)return 1;
+    w=w.replace(/(?:[^laeiouy]es|ed|[^laeiouy]e)$/,'').replace(/^y/,'');var m=w.match(/[aeiouy]{1,2}/g);return m?m.length:1}
+  function fk(t){var s=(t.match(/[.!?]+(\s|$)/g)||[1]).length;var ws=t.split(/\s+/).filter(function(x){return /[a-z]/i.test(x)});
+    var sy=ws.reduce(function(a,w){return a+syl(w)},0);return Math.max(0,.39*(ws.length/s)+11.8*(sy/ws.length)-15.59)}
+  var tmp=document.createElement('div');
+  LEVELS.forEach(function(L){tmp.innerHTML=L.html;L.g=fk(tmp.textContent);L.pct=Math.min(MAX,L.g)/MAX*100});
+  var stops=LEVELS.map(function(L,i){
+    var b=document.createElement('button'); b.type='button'; b.className='stop '+L.pos;
+    b.style.left=L.pct+'%'; b.setAttribute('aria-pressed','false');
+    b.innerHTML='<span>'+L.name+'</span><span class="g">'+L.g.toFixed(1)+'</span><i></i>';
+    b.addEventListener('click',function(e){e.stopPropagation();render(i,true)});
+    scale.appendChild(b); return b;
+  });
+  scale.addEventListener('click',function(e){
+    var r=scale.getBoundingClientRect(), p=(e.clientX-r.left)/r.width*100, best=0;
+    LEVELS.forEach(function(L,i){if(Math.abs(L.pct-p)<Math.abs(LEVELS[best].pct-p))best=i});
+    render(best,true);
+  });
+  function render(i,anim){
+    var L=LEVELS[i];
+    xm.style.left=L.pct+'%';
+    stops.forEach(function(b,k){b.setAttribute('aria-pressed',String(k===i))});
+    grade.textContent=L.g.toFixed(1);
+    grade.className='cell '+(L.g<=6?'lo':(L.g>=9?'hi':''));
+    gflag.textContent=L.g<=6?'\u2713 target':(L.g>=9?'H':'');
+    function apply(){
+      body.className='lines'+(i===2?' l2':''); body.innerHTML=L.html;
+      gloss.classList.toggle('off', i!==0); gloss.textContent='Tap a dotted term to decode it.';
+    }
+    if(anim&&!matchMedia('(prefers-reduced-motion: reduce)').matches){body.classList.add('fade');setTimeout(function(){apply();body.classList.remove('fade')},150)} else apply();
+  }
+  body.addEventListener('click',function(e){var m=e.target.closest('mark.j');if(m)gloss.innerHTML='<b>'+m.textContent+'</b> means '+m.getAttribute('data-g')+'.'});
+  var cur=0;
+  function lockHeight(){
+    var keepC=body.className, keepH=body.innerHTML, max=0;
+    body.style.minHeight='0';
+    LEVELS.forEach(function(L,i){body.className='lines'+(i===2?' l2':'');body.innerHTML=L.html;max=Math.max(max,body.scrollHeight)});
+    body.className=keepC; body.innerHTML=keepH; body.style.minHeight=max+'px';
+    var gk=gloss.innerHTML, gmax=0; gloss.style.minHeight='0';
+    tmp.innerHTML=LEVELS[0].html;
+    [].forEach.call(tmp.querySelectorAll('mark.j'),function(m){gloss.innerHTML='<b>'+m.textContent+'</b> means '+m.getAttribute('data-g')+'.';gmax=Math.max(gmax,gloss.scrollHeight)});
+    gloss.innerHTML=gk; gloss.style.minHeight=gmax+'px';
+  }
+  var _render=render; render=function(i,a){cur=i;_render(i,a)};
+  render(0,false);
+  lockHeight();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(lockHeight);
+  var rt; window.addEventListener('resize',function(){clearTimeout(rt);rt=setTimeout(lockHeight,150)});
+
+  /* results */
+  var WORKS=[
+    {k:'Poster',d:'2027',t:'Human-Centered Evaluation of LLM-Generated Clinical Note Summaries: Rapid Review',v:'<b>Kim, M.</b>, &amp; Wu, D.T.Y. AMIA 2027 Amplify Informatics Summit. Poster abstract.',s:'Under review'},
+    {k:'Paper',d:'2027',t:'Training Small Language Models for Patient-Friendly Hospital Course Summarization: Supervised Fine-Tuning and On-Policy Distillation on MIMIC-IV-Ext-BHC',v:'Ramesh, A., <b>Kim, M.</b>, &amp; Wu, D.T.Y. AMIA 2027 Amplify Informatics Summit. Full paper.',s:'Under review'},
+    {k:'Talk',d:'Nov 2026',t:'AI-based Text Summarization and Pilot Evaluation of Oncology Discharge Notes using MIMIC-IV-Ext-BHC',v:'Ramesh, A., Nguyen, O., <b>Kim, M.</b>, &amp; Wu, D.T.Y. AMIA 2026 Annual Symposium, Dallas.',s:'Accepted'},
+    {k:'Poster',d:'Aug 2026',t:'Bridging the AI Divide: A Collaborative Framework for Critical AI Literacy in Public Libraries',v:'<b>Kim, M.</b>, &amp; Kruger, S. IFLA WLIC 2026.',s:'Accepted'}
+  ];
+  var rows=document.getElementById('rows'), fb=[].slice.call(document.querySelectorAll('#filt button'));
+  var KIND={Talk:'Podium talk',Paper:'Full paper',Poster:'Poster',App:'App'};
+  function show(){
+    var on=fb.filter(function(b){return b.getAttribute('aria-pressed')==='true'}).map(function(b){return b.dataset.f});
+    var list=WORKS.filter(function(w){return on.indexOf(w.k)>=0});
+    rows.innerHTML=list.length
+      ? '<ul class="pubs">'+list.map(function(w){
+          return '<li><span class="kind">'+w.d+' · '+KIND[w.k]+' · <span class="st '+(w.s==='Accepted'?'ok':'wait')+'">'+w.s+'</span></span><span class="t">'+w.t+'</span><span class="v">'+w.v+'</span></li>';
+        }).join('')+'</ul>'
+      : '<p style="margin:0;color:var(--muted)">Nothing selected. Check a type above to see items.</p>';
+  }
+  fb.forEach(function(b){b.addEventListener('click',function(){b.setAttribute('aria-pressed',String(b.getAttribute('aria-pressed')!=='true'));show()})});
+  show();
+
+  /* history: tap a code in the legend to filter */
+  var lcs=[].slice.call(document.querySelectorAll('.lc')), lcg=document.querySelector('.lc-grid'),
+      hrows=[].slice.call(document.querySelectorAll('#v-history .board tbody tr')), active=null;
+  function filterHist(code){
+    active=(!code||active===code)?null:code;
+    lcs.forEach(function(b){b.setAttribute('aria-pressed',String(b.dataset.code===active))});
+    document.getElementById('lcReset').hidden=!active;
+    lcg.classList.toggle('filtering',!!active);
+    document.getElementById('hist').classList.toggle('filtering',!!active);
+    hrows.forEach(function(r){if(r.classList.contains('fold-row'))return;var c=r.querySelector('.code');r.hidden=!!active&&!(c&&c.classList.contains(active))});
+  }
+  lcs.forEach(function(b){b.addEventListener('click',function(){filterHist(b.dataset.code)})});
+  document.getElementById('lcReset').addEventListener('click',function(){filterHist('')});
+  var fb2=document.getElementById('fold'), ht=document.getElementById('hist'), nEarly=ht.querySelectorAll('tr.early').length;
+  fb2.addEventListener('click',function(){
+    var open=!ht.classList.contains('open'); ht.classList.toggle('open',open);
+    fb2.setAttribute('aria-expanded',String(open));
+    fb2.innerHTML=open?'Hide earlier entries <span aria-hidden="true">&uarr;</span>':'Show '+nEarly+' earlier entries &middot; Korea, 2019 to 2025 <span aria-hidden="true">&darr;</span>';
+  });
+
+  /* every page the same height as the tallest */
+  function equalize(){
+    var sheets=[].slice.call(document.querySelectorAll('.sheet')), max=0;
+    sheets.forEach(function(sh){
+      var was=sh.hidden; sh.style.minHeight='0';
+      if(was){sh.hidden=false;sh.style.visibility='hidden';sh.style.position='absolute';sh.style.width=document.querySelector('.wrap').clientWidth-parseFloat(getComputedStyle(document.querySelector('.wrap')).paddingLeft)-parseFloat(getComputedStyle(document.querySelector('.wrap')).paddingRight)+'px'}
+      max=Math.max(max,sh.offsetHeight);
+      if(was){sh.hidden=true;sh.style.visibility='';sh.style.position='';sh.style.width=''}
+    });
+    sheets.forEach(function(sh){sh.style.minHeight=max+'px'});
+  }
+  equalize();
+  if(document.fonts&&document.fonts.ready) document.fonts.ready.then(equalize);
+  window.addEventListener('load',equalize);
+  var et; window.addEventListener('resize',function(){clearTimeout(et);et=setTimeout(equalize,180)});
+})();
+</script>
+
+</body>
+</html>
