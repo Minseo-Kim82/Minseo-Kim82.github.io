@@ -773,7 +773,7 @@ body.is-plain .tabs{display:none}
     var study=['How AI can explain medical notes to patients','How to check if people truly understand the AI’s words, not just if a computer says the text is easy','How people find and use health information','How libraries can help people with health information'];
     var now=[['Main project','I am reading many studies to see how people judge AI summaries of medical notes.'],['Pilot study','Our team tested AI summaries of hospital notes for cancer patients. I helped plan how to judge them.'],['App idea','A web app that turns cancer care notes into plain words for patients.']];
     var plainText=[intro].concat(study,now.map(function(n){return n[1]}),PLAIN_PUBS).join(' ');
-    var h='<a class="back" href="#intake" data-go="intake">&larr; Back to the full form</a>';
+    var h='<a class="back" href="#intake" data-go="intake">View the full interactive version &rarr;</a>';
     h+='<p class="pf-grade">This page is written in plain words. The plain parts read at about grade <b style="color:'+(fk(plainText)<=6?'#2e7d4a':'var(--form)')+'">'+fk(plainText).toFixed(1)+'</b> (Flesch-Kincaid, computed live).</p>';
     h+='<h1>Minseo Kim <span class="meta" style="font-size:1rem;font-weight:400">김민서</span></h1>';
     h+='<p>'+intro+'</p>';
